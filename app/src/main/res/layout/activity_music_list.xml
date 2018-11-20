@@ -7,4 +7,9 @@
         android:layout_height="match_parent"
         tools:context=".MusicList">
 
+    <Button
+            android:text="Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" tools:layout_editor_absoluteY="16dp"
+            tools:layout_editor_absoluteX="3dp" android:id="@+id/button"/>
 </android.support.constraint.ConstraintLayout>
