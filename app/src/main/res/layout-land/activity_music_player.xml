@@ -5,12 +5,13 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MusicPlayer" android:padding="4dp">
+        tools:context=".MusicPlayer" android:padding="4dp" android:id="@+id/layoutBody">
 
     <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" android:layout_alignParentLeft="true" android:layout_alignParentStart="true"
+            android:layout_height="match_parent" android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_alignParentTop="true">
         <LinearLayout
                 android:orientation="vertical"

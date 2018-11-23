@@ -51,6 +51,14 @@ class MusicPlayer : AppCompatActivity() {
             override fun onSwipeRight() {
                 Toast.makeText(applicationContext, "Previous song", Toast.LENGTH_SHORT).show()
             }
+
+            override fun onSwipeBottom() {
+                Toast.makeText(applicationContext, "List", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onSwipeTop() {
+                Toast.makeText(applicationContext, "Hide list", Toast.LENGTH_SHORT).show()
+            }
         })
     }
 }
