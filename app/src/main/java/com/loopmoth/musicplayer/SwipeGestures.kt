@@ -41,7 +41,13 @@ open class OnSwipeTouchListener : View.OnTouchListener {
                         }
                     }
                 } else {
-                    // onTouch(e);
+                    if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
+                        if (diffY > 0) {
+                            onSwipeTop()
+                        } else {
+                            onSwipeBottom()
+                        }
+                    }
                 }
             } catch (exception: Exception) {
                 exception.printStackTrace()
