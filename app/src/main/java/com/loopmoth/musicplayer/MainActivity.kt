@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         bPlay.setOnClickListener {
-
+            Toast.makeText(applicationContext, "Co zagrać", Toast.LENGTH_LONG).show()
         }
 
         bNext.setOnClickListener {
