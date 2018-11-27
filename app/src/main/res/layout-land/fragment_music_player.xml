@@ -51,48 +51,5 @@
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
-        <LinearLayout
-                android:orientation="vertical"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:gravity="bottom">
-            <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginTop="10dp">
-                <SeekBar
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/seekBar" android:layout_weight="1"
-                        android:layout_marginLeft="5dp" android:layout_gravity="center"/>
-                <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/tvTime" tools:text="@string/song_time"
-                        android:layout_marginRight="5dp"
-                        android:textAppearance="@style/TextAppearance.AppCompat.Display1" android:textSize="15sp"
-                        android:layout_marginLeft="5dp" android:layout_gravity="center_horizontal"
-                        android:text="@string/song_time"/>
-            </LinearLayout>
-            <LinearLayout
-                    android:orientation="horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" android:layout_marginBottom="10dp"
-                    android:layout_marginTop="5dp">
-                <Button
-                        android:text="@string/previous_song"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/bPrevious" android:layout_weight="1"
-                        android:layout_marginLeft="5dp" style="@style/Widget.AppCompat.Button.Colored"
-                />
-                <Button
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/bPlay" android:layout_weight="1"
-                        style="@style/Widget.AppCompat.Button.Colored"
-                        tools:text="Play" android:text="@string/play_song"/>
-                <Button
-                        android:text="@string/next_song"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" android:id="@+id/bNext" android:layout_weight="1"
-                        android:layout_marginLeft="5dp" style="@style/Widget.AppCompat.Button.Colored"/>
-            </LinearLayout>
-        </LinearLayout>
     </LinearLayout>
 </RelativeLayout>
