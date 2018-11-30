@@ -1,5 +1,7 @@
 package com.loopmoth.musicplayer
 
+import android.app.Activity
+import android.app.PendingIntent.getActivity
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle

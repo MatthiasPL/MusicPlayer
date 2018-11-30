@@ -23,7 +23,7 @@
                 <ImageView
                         android:src="@mipmap/ic_launcher_round"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent" android:id="@+id/imageView3" android:layout_weight="1"/>
+                        android:layout_height="match_parent" android:id="@+id/cover" android:layout_weight="1"/>
                 <TextView
                         android:text="@string/song_title"
                         android:layout_width="match_parent"
