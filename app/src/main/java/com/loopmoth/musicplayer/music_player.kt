@@ -3,13 +3,18 @@ package com.loopmoth.musicplayer
 import android.app.Activity
 import android.app.PendingIntent.getActivity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
+import android.net.sip.SipSession
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import kotlinx.android.synthetic.main.fragment_music_player.*
+import kotlinx.android.synthetic.main.fragment_music_player.view.*
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -27,14 +32,37 @@ private const val ARG_PARAM2 = "param2"
  *
  */
 class music_player : Fragment() {
-    companion object {
 
-        fun newInstance(): music_player {
-            return music_player()
-        }
+    var activityCallback: Listener? = null
+
+    interface Listener{
+        fun getMusicList(): MusicPlayer
     }
 
+    private var root: View? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater?.inflate(R.layout.fragment_music_player, container, false)
+        root = inflater.inflate(R.layout.fragment_music_player, container, false)  // initialize it here
+        /*try{
+            activityCallback = context as Listener
+        }catch(e: ClassCastException){
+            throw ClassCastException(context?.toString()+" must implement Listener")
+        }*/
+        return root
+    }
+
+    fun changeText(name: String, artist: String, album: String){
+        tvTitle.text=name
+        tvArtist.text=artist
+        tvAlbum.text=album
+    }
+
+    fun changeCover(songCover: Any){
+            if(songCover is Bitmap){
+                cover.setImageBitmap(songCover)
+            }
+            else{
+                cover.setImageResource(R.mipmap.default_cover)
+            }
     }
 }

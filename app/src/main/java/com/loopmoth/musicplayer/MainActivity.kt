@@ -1,6 +1,7 @@
 package com.loopmoth.musicplayer
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
 import android.net.Uri
@@ -13,11 +14,15 @@ import android.widget.SeekBar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_music_player.*
 import java.io.File
-import android.os.Environment
 import android.graphics.BitmapFactory
+import android.widget.Toast
 import java.util.concurrent.TimeUnit
+import android.util.Log
+import android.widget.ImageButton
+import android.widget.ImageView
 
-class MainActivity : AppCompatActivity() {
+
+class MainActivity : AppCompatActivity(), music_player.Listener {
 
     private var musicliststate = MusicListState.HIDDEN
     var musicplayerstate = PlayerState.NEW
@@ -27,16 +32,30 @@ class MainActivity : AppCompatActivity() {
     var art: ByteArray? = null
     var musicPlayer = MusicPlayer()
 
+    val player = music_player()
+    val musicList = BlankFragment()
+    val manager = supportFragmentManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        val transaction = manager.beginTransaction()
 
-        val player = music_player()
-        val manager = supportFragmentManager
-        val translation = manager.beginTransaction()
+        val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+        if(test!=null){
+            test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+            val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+            test.changeCover(icon)
+            try{
+                test.changeCover(musicPlayer.getCover())
+            }
+            catch (e: java.lang.Exception){
 
-        translation.replace(R.id.fragmentContainer, player)
-        translation.commit()
+            }
+        }
+
+        transaction.add(R.id.fragmentContainer, player, "mp")
+        transaction.commit()
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
@@ -75,31 +94,48 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun getMusicList():MusicPlayer{
+        //val frag = supportFragmentManager.findFragmentById(R.id.mtrl_child_content_container) as music_player
+        //frag.changeText("test")
+        return musicPlayer
+    }
+
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
             R.id.menu_expand -> {
                 if(musicliststate==MusicListState.HIDDEN){
-                    val musicList = BlankFragment()
                     val transaction = supportFragmentManager.beginTransaction()
 
                     musicliststate=MusicListState.EXPANDED
                     item.setTitle("Hide playlist")
 
                     transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top)
-                    transaction.replace(R.id.fragmentContainer, musicList)
+                    transaction.remove(player)
+                    transaction.add(R.id.fragmentContainer, musicList, "ml")
                     transaction.commit()
                 }
                 else{
-                    val player = music_player()
                     val transaction = supportFragmentManager.beginTransaction()
 
                     musicliststate=MusicListState.HIDDEN
                     item.setTitle("Expand playlist")
 
                     transaction.setCustomAnimations(R.anim.enter_from_bottom, R.anim.exit_to_top)
-                    transaction.replace(R.id.fragmentContainer, player)
-                    setTrackInfo(musicPlayer.getUri())
+                    transaction.remove(musicList)
+                    transaction.add(R.id.fragmentContainer, player, "mp")
                     transaction.commit()
+                }
+                val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+                if(test!=null){
+                    test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+                    val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+                    test.changeCover(icon)
+                    try{
+                        test.changeCover(musicPlayer.getCover())
+                    }
+                    catch (e: java.lang.Exception){
+
+                    }
                 }
             }
         }
@@ -158,14 +194,16 @@ class MainActivity : AppCompatActivity() {
         if(musicplayerstate==PlayerState.NEW){
             mediaplayer = MediaPlayer.create(applicationContext, musicPlayer.getUri())
             mediaplayer.start()
-            setTrackInfo(musicPlayer.getUri())
+            //setTrackInfo(musicPlayer.getUri())
             InitializeSeekBar()
-            bPlay.text = "pause"
+            bPlay.setBackgroundResource(R.drawable.ic_pause_circle_outline_black_24dp)
             musicplayerstate = PlayerState.PLAYING
         }
         //Change song
         else if(musicplayerstate==PlayerState.SONGCHANGED){
-            mediaplayer.release()
+            if(this::mediaplayer.isInitialized){
+                mediaplayer.release()
+            }
             musicplayerstate = PlayerState.NEW
             playSong()
         }
@@ -173,17 +211,17 @@ class MainActivity : AppCompatActivity() {
         else if(musicplayerstate==PlayerState.PLAYING){
             mediaplayer.pause()
             musicplayerstate=PlayerState.PAUSED
-            bPlay.text = "play"
+            bPlay.setBackgroundResource(R.drawable.ic_play_circle_outline_black_24dp)
         }
         //Resume song
         else if(musicplayerstate==PlayerState.PAUSED){
             mediaplayer.start()
             musicplayerstate=PlayerState.PLAYING
-            bPlay.text = "pause"
+            bPlay.setBackgroundResource(R.drawable.ic_pause_circle_outline_black_24dp)
         }
         //if end of song
         mediaplayer.setOnCompletionListener {
-            bPlay.text="Pause"
+            bPlay.setBackgroundResource(R.drawable.ic_pause_circle_outline_black_24dp)
             musicPlayer.NextSong(this)
             mediaplayer.release()
             musicplayerstate=PlayerState.NEW
@@ -191,40 +229,18 @@ class MainActivity : AppCompatActivity() {
             playSong()
         }
 
-        /*if(musicplayerstate==PlayerState.NEW||musicplayerstate==PlayerState.SONGCHANGED){
-            if(musicplayerstate==PlayerState.SONGCHANGED){
-                mediaplayer.release()
-                //mediaplayer.stop()
-                musicplayerstate=PlayerState.NEW
-                handler.removeCallbacks(runnable)
+        val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+        if(test!=null && test.isVisible){
+            test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+            val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+            test.changeCover(icon)
+            try{
+                test.changeCover(musicPlayer.getCover())
             }
-            //val fileName = "song.mp3"
-            val fileName = musicPlayer.getSongName()
-            val completePath = Environment.getExternalStorageDirectory().toString() + "/" + fileName
-            //tvTitle.text=completePath
+            catch (e: java.lang.Exception){
 
-            val file = File(completePath)
-            val uri1 = Uri.fromFile(file)
-
-            mediaplayer = MediaPlayer.create(applicationContext, uri1)
-            mediaplayer.start()
-            setTrackInfo(uri1)
-
-            InitializeSeekBar()
-
-            bPlay.text="Pause"
-            musicplayerstate=PlayerState.PLAYING
+            }
         }
-        else if (musicplayerstate==PlayerState.PLAYING){
-            //mediaplayer.pause()
-            musicplayerstate=PlayerState.PAUSED
-            bPlay.text="Play"
-        }
-        else if(musicplayerstate==PlayerState.PAUSED){
-            //mediaplayer.start()
-            musicplayerstate=PlayerState.PLAYING
-            bPlay.text="Pause"
-        }*/
     }
 
     @SuppressLint("DefaultLocale")
@@ -248,4 +264,7 @@ class MainActivity : AppCompatActivity() {
 
         return stringTime
     }
+
+    fun Context.toast(message: CharSequence) =
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
 }
