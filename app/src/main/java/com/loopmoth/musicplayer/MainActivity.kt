@@ -10,16 +10,14 @@ import android.os.Bundle
 import android.os.Handler
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.SeekBar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_music_player.*
 import java.io.File
 import android.graphics.BitmapFactory
-import android.widget.Toast
+import android.os.PersistableBundle
 import java.util.concurrent.TimeUnit
 import android.util.Log
-import android.widget.ImageButton
-import android.widget.ImageView
+import android.widget.*
 
 
 class MainActivity : AppCompatActivity(), music_player.Listener {
@@ -39,10 +37,10 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val transaction = manager.beginTransaction()
 
-        transaction.add(R.id.fragmentContainer, player, "mp")
-        transaction.commit()
+        //val transaction = manager.beginTransaction()
+        //transaction.add(R.id.fragmentContainer, player, "mp")
+        //transaction.commit()
 
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
 
@@ -83,6 +81,33 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
 
     override fun onResume() {
         super.onResume()
+
+        if ((fragmentContainer as FrameLayout).childCount > 0)
+            (fragmentContainer as FrameLayout).removeAllViewsInLayout()
+
+        val transaction = manager.beginTransaction()
+        //transaction.remove(player)
+        //transaction.remove(musicList)
+        transaction.add(R.id.fragmentContainer, player, "mp")
+        transaction.commit()
+        transaction.runOnCommit {
+            val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+
+            if(test!=null){
+                test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+                val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+                test.changeCover(icon)
+                try{
+                    test.changeCover(musicPlayer.getCover())
+                }
+                catch (e: java.lang.Exception){
+
+                }
+            }
+        }
+
+        playSong()
+
         val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
         if(test!=null){
             test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
@@ -163,6 +188,46 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
         return super.onCreateOptionsMenu(menu)
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        super.onSaveInstanceState(outState)
+        if(outState!=null){
+
+            outState.putInt("songindex", musicPlayer.songindex)
+            outState.putString("musicliststate", musicliststate.toString())
+            outState.putString("musicplayerstate", musicplayerstate.toString())
+            outState.putInt("currsec", mediaplayer.currentPosition)
+            mediaplayer.release()
+            handler.removeCallbacks(runnable)
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
+        if(savedInstanceState!=null){
+            playSong()
+            musicliststate=MusicListState.valueOf(savedInstanceState.getString("musicliststate"))
+            musicplayerstate=PlayerState.valueOf(savedInstanceState.getString("musicplayerstate"))
+            musicPlayer.songindex = savedInstanceState.getInt("songindex")
+            mediaplayer.seekTo(savedInstanceState.getInt("currsec"))
+            //mediaplayer.currentPosition=savedInstanceState.getInt("currsec")
+            //playSong()
+            playSong()
+
+            val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+            if(test!=null){
+                test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+                val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+                test.changeCover(icon)
+                try{
+                    test.changeCover(musicPlayer.getCover())
+                }
+                catch (e: java.lang.Exception){
+
+                }
+            }
+        }
+        super.onRestoreInstanceState(savedInstanceState)
+    }
+
     private fun InitializeSeekBar(){
         seekBar.max = mediaplayer.duration/1000
         runnable = Runnable {
@@ -200,7 +265,6 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
         if(musicplayerstate==PlayerState.NEW){
             mediaplayer = MediaPlayer.create(applicationContext, musicPlayer.getUri())
             mediaplayer.start()
-            //setTrackInfo(musicPlayer.getUri())
             InitializeSeekBar()
             bPlay.setBackgroundResource(R.drawable.ic_pause_circle_outline_black_24dp)
             musicplayerstate = PlayerState.PLAYING
