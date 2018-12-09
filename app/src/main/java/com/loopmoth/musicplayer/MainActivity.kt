@@ -14,13 +14,14 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_music_player.*
 import java.io.File
 import android.graphics.BitmapFactory
+import android.os.Environment
 import android.os.PersistableBundle
 import java.util.concurrent.TimeUnit
 import android.util.Log
 import android.widget.*
 
 
-class MainActivity : AppCompatActivity(), music_player.Listener {
+class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.Listener {
 
     private var musicliststate = MusicListState.HIDDEN
     var musicplayerstate = PlayerState.NEW
@@ -29,6 +30,8 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
     private var handler = Handler()
     var art: ByteArray? = null
     var musicPlayer = MusicPlayer()
+    val listmusic = mutableListOf<String>()
+    val pathlist = mutableListOf<String>()
 
     val player = music_player()
     val musicList = BlankFragment()
@@ -82,26 +85,46 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
     override fun onResume() {
         super.onResume()
 
+        getPlayList(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString())
+        //getPlayList(Environment.getExternalStorageDirectory().toString())
+        musicPlayer.songs=pathlist
+
         if ((fragmentContainer as FrameLayout).childCount > 0)
             (fragmentContainer as FrameLayout).removeAllViewsInLayout()
 
         val transaction = manager.beginTransaction()
-        //transaction.remove(player)
-        //transaction.remove(musicList)
-        transaction.add(R.id.fragmentContainer, player, "mp")
+        if(musicliststate==MusicListState.HIDDEN){
+            transaction.add(R.id.fragmentContainer, player, "mp")
+        }
+        else{
+            transaction.add(R.id.fragmentContainer, musicList, "ml")
+        }
         transaction.commit()
         transaction.runOnCommit {
-            val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+            if(musicliststate==MusicListState.HIDDEN){
+                val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
 
-            if(test!=null){
-                test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
-                val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
-                test.changeCover(icon)
-                try{
-                    test.changeCover(musicPlayer.getCover())
+                if(test!=null){
+                    test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+                    val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+                    test.changeCover(icon)
+                    try{
+                        test.changeCover(musicPlayer.getCover())
+                    }
+                    catch (e: java.lang.Exception){
+
+                    }
                 }
-                catch (e: java.lang.Exception){
+            }else{
+                val test = supportFragmentManager.findFragmentByTag("ml") as BlankFragment?
 
+                if(test!=null){
+                    try{
+                        test.setList(listmusic)
+                    }
+                    catch (e: java.lang.Exception){
+
+                    }
                 }
             }
         }
@@ -128,6 +151,10 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
         return musicPlayer
     }
 
+    override fun getMediaPlayer(): MediaPlayer {
+        return mediaplayer
+    }
+
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId){
             R.id.menu_expand -> {
@@ -141,6 +168,18 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
                     transaction.remove(player)
                     transaction.add(R.id.fragmentContainer, musicList, "ml")
                     transaction.commit()
+                    transaction.runOnCommit {
+                        val test = supportFragmentManager.findFragmentByTag("ml") as BlankFragment?
+
+                        if(test!=null){
+                            try{
+                                test.setList(listmusic)
+                            }
+                            catch (e: java.lang.Exception){
+
+                            }
+                        }
+                    }
                 }
                 else{
                     val transaction = supportFragmentManager.beginTransaction()
@@ -203,10 +242,15 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
         if(savedInstanceState!=null){
+            getPlayList(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString())
+            musicPlayer.songs=pathlist
+
+            musicPlayer.songindex = savedInstanceState.getInt("songindex")
+
             playSong()
             musicliststate=MusicListState.valueOf(savedInstanceState.getString("musicliststate"))
             musicplayerstate=PlayerState.valueOf(savedInstanceState.getString("musicplayerstate"))
-            musicPlayer.songindex = savedInstanceState.getInt("songindex")
+            //musicPlayer.songindex = savedInstanceState.getInt("songindex")
             mediaplayer.seekTo(savedInstanceState.getInt("currsec"))
             //mediaplayer.currentPosition=savedInstanceState.getInt("currsec")
             //playSong()
@@ -258,6 +302,51 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
     private fun getRealPathFromURI(uri: Uri): String {
         val myFile = File(uri.path!!.toString())
         return myFile.getAbsolutePath()
+    }
+
+    fun getPlayList(rootPath: String):MutableList<String> {
+
+        var fileList = mutableListOf<String>()
+        try {
+            val rootFolder = File(rootPath)
+            val files =
+                rootFolder.listFiles() //here you will get NPE if directory doesn't contains  any file,handle it like this.
+            for (file in files!!) {
+                if (file.isDirectory) {
+                    if (getPlayList(file.absolutePath) != mutableListOf("No items")) {
+                        fileList.addAll(listOf(getPlayList(file.absolutePath).toString()))
+                    } else {
+                        break
+                    }
+                } else if (file.name.endsWith(".mp3")) {
+                    listmusic.add(file.name)
+                    pathlist.add(file.absolutePath)
+                    val song = HashMap<String, String>()
+                    //listmusic.add(file.name.toString())
+                    song.put("file_name", file.name)
+                    song.put("file_path", file.absolutePath)
+                    fileList.add(song.toString())
+                    //listmusic.add(song.toString())
+                    /*for ((file_name, s) in song) {
+                        //listmusic.add(s)
+                       // fileList.add(s)           //te pętle wykonują się dwa razy...
+                    }
+                    for ((file_path, s) in song) {
+                        pathlist.add(s)
+                    }*/
+                }
+            }
+            return fileList
+            //tu filelist jest do przekazywania ścieżki
+        } catch (e: Exception) {
+            fileList=mutableListOf("No items")
+            return fileList
+        }
+    }
+
+    fun GetAbsolutePathOfSong(index: Int): String{
+        val path=pathlist[index]
+        return path
     }
 
     fun playSong(){

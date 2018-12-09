@@ -15,43 +15,48 @@ import java.lang.Exception
 
 
 class MusicPlayer {
-    var songtitle: String="Unknown Title"
-    var songartist: String = "Unknown Title"
+    //var songtitle: String="Unknown Title"
+    var songartist: String = "Unknown Artist"
     var songalbum: String = "Unknown Album"
     lateinit var songcover: BitmapFactory
 
     var songindex: Int = 0
-    var songs: MutableList<String> = mutableListOf("metro.mp3", "song.mp3")
+    //var songs: MutableList<String> = mutableListOf("metro.mp3", "song.mp3")
+    var songs = mutableListOf<String>()
 
     fun getTitle(): String{
-        val metaRetriever = MediaMetadataRetriever()
+
         try{
+            val metaRetriever = MediaMetadataRetriever()
             metaRetriever.setDataSource(getRealPathFromURI(getUri()))
+            return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
         }
         catch (e: Exception){
-            return songtitle
+            return getSongName().substringAfterLast("/")
         }
-        return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+
     }
     fun getArtist(): String{
-        val metaRetriever = MediaMetadataRetriever()
+
         try{
+            val metaRetriever = MediaMetadataRetriever()
             metaRetriever.setDataSource(getRealPathFromURI(getUri()))
+            return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
+
         }
         catch (e: Exception){
             return songartist
         }
-        return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST)
     }
     fun getAlbum(): String{
-        val metaRetriever = MediaMetadataRetriever()
         try{
+            val metaRetriever = MediaMetadataRetriever()
             metaRetriever.setDataSource(getRealPathFromURI(getUri()))
+            return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
         }
         catch(e:Exception){
             return songalbum
         }
-        return metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM)
     }
     fun getCover():Bitmap{
         val metaRetriever = MediaMetadataRetriever()
@@ -95,7 +100,8 @@ class MusicPlayer {
     }
 
     fun getUri():Uri{
-        val completePath = Environment.getExternalStorageDirectory().toString() + "/" + getSongName()
+        //val completePath = Environment.getExternalStorageDirectory().toString() + "/" + getSongName()
+        val completePath = getSongName()
         val uri = Uri.fromFile(File(completePath))
         return uri
     }
