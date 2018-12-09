@@ -1,13 +1,30 @@
 package com.loopmoth.musicplayer
 
+import android.content.Context
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Environment.getExternalStorageDirectory
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.TextView
+import kotlinx.android.synthetic.main.activity_music_list.*
 import java.io.File
 import java.nio.file.Files.isDirectory
+import android.provider.MediaStore
+import android.support.v4.content.ContextCompat.startActivity
+import android.content.Intent
+import android.provider.MediaStore.Audio
+import android.widget.AdapterView
+import android.app.Activity
+import android.widget.AdapterView.OnItemClickListener
+
+
+
+
+
+
+
+
 
 
 
@@ -19,77 +36,72 @@ class MusicList : AppCompatActivity() {
         setContentView(R.layout.activity_music_list)
     }
 
-    private val listmp3 = ArrayList<String>()
-    var extensions = arrayOf("mp3")
 
-    private fun loadmp3(YourFolderPath: String) {
+    val listmusic = mutableListOf<String>()
+    val pathlist = mutableListOf<String>()
 
-        val file = File(YourFolderPath)
-        if (file.isDirectory) {
-            val files = file.listFiles()
-            if (files != null && files.size > 0) {
-                for (f in files) {
-                    if (f.isDirectory) {
-                        loadmp3(f.absolutePath)
-                    } else {
-                        for (i in extensions.indices) {
-                            if (f.absolutePath.endsWith(extensions[i])) {
-                                listmp3.add(f.absolutePath)
-                            }
-                        }
-                    }
-                }
-            }
-        }
+    fun getPlayList(rootPath: String):MutableList<String> {
 
-    }
-
-    fun getPlayList(rootPath: String): MutableList<String>? {
-        val fileList : MutableList<String> = mutableListOf()
-
+        var fileList = mutableListOf<String>()
         try {
             val rootFolder = File(rootPath)
             val files =
                 rootFolder.listFiles() //here you will get NPE if directory doesn't contains  any file,handle it like this.
             for (file in files!!) {
                 if (file.isDirectory) {
-                    if (getPlayList(file.absolutePath) != null) {
+                    if (getPlayList(file.absolutePath) != mutableListOf("No items")) {
                         fileList.addAll(listOf(getPlayList(file.absolutePath).toString()))
                     } else {
                         break
                     }
                 } else if (file.name.endsWith(".mp3")) {
-                    val song = HashMap<String,String>()
-                    song.put("file_path", file.absolutePath)
+                    listmusic.add(file.name)
+                    pathlist.add(file.absolutePath)
+                    val song = HashMap<String, String>()
+                    //listmusic.add(file.name.toString())
                     song.put("file_name", file.name)
+                    song.put("file_path", file.absolutePath)
                     fileList.add(song.toString())
+                    //listmusic.add(song.toString())
+                    /*for ((file_name, s) in song) {
+                        //listmusic.add(s)
+                       // fileList.add(s)           //te pętle wykonują się dwa razy...
+                    }
+                    for ((file_path, s) in song) {
+                        pathlist.add(s)
+                    }*/
                 }
             }
             return fileList
+            //tu filelist jest do przekazywania ścieżki
         } catch (e: Exception) {
-            return null
+            fileList=mutableListOf("No items")
+            return fileList
+        }
+    }
+
+    fun GetAbsolutePathOfSong(index: Int): String{
+        val path=pathlist[index]
+        return path
+    }
+
+
+
+        override fun onResume() {
+            super.onResume()
+
+            val MusicList = findViewById<ListView>(R.id.MusicList)
+
+            val content=getPlayList("/storage/emulated/0/Download/")
+
+            val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, listmusic)
+            MusicList.adapter = adapter
+
+            MusicList.setOnItemClickListener { parent, view, position, id ->
+                GetAbsolutePathOfSong(id.toInt())
+                // Tu zmiana utworu
+            }
         }
 
+
     }
-
-    override fun onResume() {
-        super.onResume()
-
-        val MusicList=findViewById<ListView>(R.id.MusicList)
-
-
-
-        /*val listItems: MutableList<String> = mutableListOf("song1", "song2", "song3","song4", "song5", "song6","song7", "song8", "song9",
-            "song10","song11", "song12", "song13","song14", "song15", "song16","song17", "song18", "song19","song1", "song2", "song3","song4", "song5", "song6","song7", "song8", "song9",
-            "song10","song11", "song12", "song13","song14", "song15", "song16","song17", "song18", "song19","song1", "song2", "song3","song4", "song5", "song6","song7", "song8", "song9",
-            "song10","song11", "song12", "song13","song14", "song15", "song16","song17", "song18", "song19","song1", "song2", "song3","song4", "song5", "song6","song7", "song8", "song9",
-            "song10","song11", "song12", "song13","song14", "song15", "song16","song17", "song18", "song19","song1", "song2", "song3","song4", "song5", "song6","song7", "song8", "song9",
-            "song10","song11", "song12", "song13","song14", "song15", "song16","song17", "song18", "song19")*/
-
-        //loadmp3("/mnt/sdcard/")
-        //getPlayList(getExternalStorageDirectory().getAbsolutePath())
-
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, getPlayList(getExternalStorageDirectory().getAbsolutePath()))
-        MusicList.adapter = adapter
-    }
-}
