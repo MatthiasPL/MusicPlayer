@@ -41,19 +41,6 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
         setContentView(R.layout.activity_main)
         val transaction = manager.beginTransaction()
 
-        val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
-        if(test!=null){
-            test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
-            val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
-            test.changeCover(icon)
-            try{
-                test.changeCover(musicPlayer.getCover())
-            }
-            catch (e: java.lang.Exception){
-
-            }
-        }
-
         transaction.add(R.id.fragmentContainer, player, "mp")
         transaction.commit()
 
@@ -94,6 +81,22 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+        if(test!=null){
+            test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+            val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+            test.changeCover(icon)
+            try{
+                test.changeCover(musicPlayer.getCover())
+            }
+            catch (e: java.lang.Exception){
+
+            }
+        }
+    }
+
     override fun getMusicList():MusicPlayer{
         //val frag = supportFragmentManager.findFragmentById(R.id.mtrl_child_content_container) as music_player
         //frag.changeText("test")
@@ -124,17 +127,20 @@ class MainActivity : AppCompatActivity(), music_player.Listener {
                     transaction.remove(musicList)
                     transaction.add(R.id.fragmentContainer, player, "mp")
                     transaction.commit()
-                }
-                val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
-                if(test!=null){
-                    test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
-                    val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
-                    test.changeCover(icon)
-                    try{
-                        test.changeCover(musicPlayer.getCover())
-                    }
-                    catch (e: java.lang.Exception){
+                    transaction.runOnCommit {
+                        val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
 
+                        if(test!=null){
+                            test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+                            val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+                            test.changeCover(icon)
+                            try{
+                                test.changeCover(musicPlayer.getCover())
+                            }
+                            catch (e: java.lang.Exception){
+
+                            }
+                        }
                     }
                 }
             }

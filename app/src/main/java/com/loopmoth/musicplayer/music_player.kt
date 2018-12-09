@@ -51,6 +51,11 @@ class music_player : Fragment() {
         return root
     }
 
+    override fun onAttach(context: Context?) {
+        super.onAttach(context)
+
+    }
+
     fun changeText(name: String, artist: String, album: String){
         tvTitle.text=name
         tvArtist.text=artist
