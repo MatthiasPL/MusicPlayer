@@ -74,25 +74,25 @@ class MusicPlayer {
         }
     }
 
-    fun NextSong(activity: Activity){
+    fun NextSong(){
         if(songindex>=songs.size-1){
             songindex=0
         }
         else{
             songindex++
         }
-        (activity as MainActivity).musicplayerstate=PlayerState.SONGCHANGED
+        //(activity as MainActivity).musicplayerstate=PlayerState.SONGCHANGED
         //(activity as MainActivity).playSong()
     }
 
-    fun PrevSong(activity: Activity){
+    fun PrevSong(){
         if(songindex<=0){
             songindex=songs.size-1
         }
         else{
             songindex--
         }
-        (activity as MainActivity).musicplayerstate=PlayerState.SONGCHANGED
+        //(activity as MainActivity).musicplayerstate=PlayerState.SONGCHANGED
         //(activity as MainActivity).playSong()
     }
     fun getSongName():String{

@@ -33,8 +33,8 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
     val listmusic = mutableListOf<String>()
     val pathlist = mutableListOf<String>()
 
-    val player = music_player()
-    val musicList = BlankFragment()
+    var player = music_player()
+    var musicList = BlankFragment()
     val manager = supportFragmentManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,20 +72,39 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
         }
 
         bNext.setOnClickListener {
-            musicPlayer.NextSong(this)
+            musicPlayer.NextSong()
+            musicplayerstate=PlayerState.SONGCHANGED
             playSong()
         }
 
         bPrevious.setOnClickListener {
-            musicPlayer.PrevSong(this)
+            musicPlayer.PrevSong()
+            musicplayerstate=PlayerState.SONGCHANGED
             playSong()
         }
+
+        fragmentContainer.setOnTouchListener(object : OnSwipeTouchListener() {
+            override fun onSwipeLeft() {
+                musicPlayer.NextSong()
+                musicplayerstate=PlayerState.SONGCHANGED
+                playSong()
+            }
+            override fun onSwipeRight() {
+                musicPlayer.PrevSong()
+                musicplayerstate=PlayerState.SONGCHANGED
+                playSong()
+            }
+        })
     }
 
     override fun onResume() {
         super.onResume()
 
+        player = music_player()
+        musicList = BlankFragment()
+
         getPlayList(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString())
+        //getPlayList(Environment.getExternalStorageDirectory().toString())
         //getPlayList(Environment.getExternalStorageDirectory().toString())
         musicPlayer.songs=pathlist
 
@@ -130,6 +149,7 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
         }
 
         playSong()
+        playSong()
 
         val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
         if(test!=null){
@@ -153,6 +173,18 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
 
     override fun getMediaPlayer(): MediaPlayer {
         return mediaplayer
+    }
+
+    override fun setMusicPlayerState(state: PlayerState) {
+        musicplayerstate = state
+    }
+
+    override fun removeHandler() {
+        handler.removeCallbacks(runnable)
+    }
+
+    override fun setSong(index: Long) {
+        musicPlayer.songindex=index.toInt()
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
@@ -229,46 +261,46 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
 
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
-        if(outState!=null){
-
-            outState.putInt("songindex", musicPlayer.songindex)
-            outState.putString("musicliststate", musicliststate.toString())
-            outState.putString("musicplayerstate", musicplayerstate.toString())
-            outState.putInt("currsec", mediaplayer.currentPosition)
-            mediaplayer.release()
-            handler.removeCallbacks(runnable)
-        }
+//        if(outState!=null){
+//
+//            outState.putInt("songindex", musicPlayer.songindex)
+//            outState.putString("musicliststate", musicliststate.toString())
+//            outState.putString("musicplayerstate", musicplayerstate.toString())
+//            outState.putInt("currsec", mediaplayer.currentPosition)
+//            mediaplayer.release()
+//            handler.removeCallbacks(runnable)
+//        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle?) {
-        if(savedInstanceState!=null){
-            getPlayList(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString())
-            musicPlayer.songs=pathlist
-
-            musicPlayer.songindex = savedInstanceState.getInt("songindex")
-
-            playSong()
-            musicliststate=MusicListState.valueOf(savedInstanceState.getString("musicliststate"))
-            musicplayerstate=PlayerState.valueOf(savedInstanceState.getString("musicplayerstate"))
-            //musicPlayer.songindex = savedInstanceState.getInt("songindex")
-            mediaplayer.seekTo(savedInstanceState.getInt("currsec"))
-            //mediaplayer.currentPosition=savedInstanceState.getInt("currsec")
-            //playSong()
-            playSong()
-
-            val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
-            if(test!=null){
-                test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
-                val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
-                test.changeCover(icon)
-                try{
-                    test.changeCover(musicPlayer.getCover())
-                }
-                catch (e: java.lang.Exception){
-
-                }
-            }
-        }
+//        if(savedInstanceState!=null){
+//            getPlayList(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString())
+//            musicPlayer.songs=pathlist
+//
+//            musicPlayer.songindex = savedInstanceState.getInt("songindex")
+//
+//            playSong()
+//            musicliststate=MusicListState.valueOf(savedInstanceState.getString("musicliststate"))
+//            musicplayerstate=PlayerState.valueOf(savedInstanceState.getString("musicplayerstate"))
+//            //musicPlayer.songindex = savedInstanceState.getInt("songindex")
+//            mediaplayer.seekTo(savedInstanceState.getInt("currsec"))
+//            //mediaplayer.currentPosition=savedInstanceState.getInt("currsec")
+//            //playSong()
+//            playSong()
+//
+//            val test = supportFragmentManager.findFragmentByTag("mp") as music_player?
+//            if(test!=null){
+//                test.changeText(musicPlayer.getTitle(), musicPlayer.getArtist(), musicPlayer.getAlbum())
+//                val icon = BitmapFactory.decodeResource(resources, R.mipmap.default_cover)
+//                test.changeCover(icon)
+//                try{
+//                    test.changeCover(musicPlayer.getCover())
+//                }
+//                catch (e: java.lang.Exception){
+//
+//                }
+//            }
+//        }
         super.onRestoreInstanceState(savedInstanceState)
     }
 
@@ -349,7 +381,7 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
         return path
     }
 
-    fun playSong(){
+    override fun playSong(){
         //Play song
         if(musicplayerstate==PlayerState.NEW){
             mediaplayer = MediaPlayer.create(applicationContext, musicPlayer.getUri())
@@ -381,7 +413,8 @@ class MainActivity : AppCompatActivity(), music_player.Listener, BlankFragment.L
         //if end of song
         mediaplayer.setOnCompletionListener {
             bPlay.setBackgroundResource(R.drawable.ic_pause_circle_outline_black_24dp)
-            musicPlayer.NextSong(this)
+            musicPlayer.NextSong()
+            musicplayerstate=PlayerState.SONGCHANGED
             mediaplayer.release()
             musicplayerstate=PlayerState.NEW
             handler.removeCallbacks(runnable)

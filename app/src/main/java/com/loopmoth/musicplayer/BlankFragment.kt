@@ -36,6 +36,10 @@ class BlankFragment : Fragment() {
     interface Listener{
         fun getMusicList(): MusicPlayer
         fun getMediaPlayer(): MediaPlayer
+        fun setMusicPlayerState(state: PlayerState)
+        fun playSong()
+        fun removeHandler()
+        fun setSong(index: Long)
     }
 
     val listmusic = mutableListOf<String>()
@@ -116,7 +120,17 @@ class BlankFragment : Fragment() {
     fun setList(list: List<String>){
         MusicList.setOnItemClickListener { parent, view, position, id ->
             id.toInt()
-            Toast.makeText(context, id.toString(), Toast.LENGTH_LONG).show()
+            try{
+                activityCallback = context as Listener
+                activityCallback!!.setSong(id)
+                activityCallback!!.setMusicPlayerState(PlayerState.SONGCHANGED)
+                activityCallback!!.removeHandler()
+                activityCallback!!.playSong()
+            }catch(e: ClassCastException){
+                throw ClassCastException(context?.toString()+" must implement Listener")
+            }
+
+            //Toast.makeText(context, id.toString(), Toast.LENGTH_LONG).show()
         }
         var songs = mutableListOf<String>()
 
